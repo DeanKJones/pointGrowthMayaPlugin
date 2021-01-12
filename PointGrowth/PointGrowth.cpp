@@ -2,7 +2,8 @@
 
 MTypeId     PointGrowthNode::id(0x00000451);
 MObject		PointGrowthNode::aOutValue;
-MObject		PointGrowthNode::aInValue;
+MObject		PointGrowthNode::aInValueX;
+MObject		PointGrowthNode::aInValueZ;
 MObject		PointGrowthNode::aMagnitude;
 MObject		PointGrowthNode::aMean;
 MObject		PointGrowthNode::aVariance;
@@ -22,6 +23,19 @@ void* PointGrowthNode::creator()
 
 MStatus PointGrowthNode::initialize()
 {
+
+	/// --- Create 3Float inputs --- ///
+	/*
+	  MFnNumericData numericData;
+      MObject obj = numericData.create( MFnNumericData::k3Float, &returnStatus );
+      CHECK_MSTATUS( returnStatus );
+
+      returnStatus = numericData.setData( (float)2.5, (float)8.7, (float)2.3345 );
+      CHECK_MSTATUS( returnStatus );
+
+      outputData.set( obj );
+	  */
+
 	MStatus status;
 	MFnNumericAttribute nAttr;
 
@@ -30,18 +44,25 @@ MStatus PointGrowthNode::initialize()
 	nAttr.setStorable(false);
 	addAttribute(aOutValue);
 
-	aInValue = nAttr.create("inValue", "inValue", MFnNumericData::kFloat);
+	aInValueX = nAttr.create("inValueX", "inValueX", MFnNumericData::kFloat);
 	nAttr.setKeyable(true);
-	addAttribute(aInValue);
-	attributeAffects(aInValue, aOutValue);
+	addAttribute(aInValueX);
+	attributeAffects(aInValueX, aOutValue);
+
+	aInValueZ = nAttr.create("inValueZ", "inValueZ", MFnNumericData::kFloat);
+	nAttr.setKeyable(true);
+	addAttribute(aInValueZ);
+	attributeAffects(aInValueZ, aOutValue);
 
 	aMagnitude = nAttr.create("magnitude", "magnitude", MFnNumericData::kFloat);
 	nAttr.setKeyable(true);
 	addAttribute(aMagnitude);
 	attributeAffects(aMagnitude, aOutValue);
 
-	aMean = nAttr.create("mean", "mean", MFnNumericData::kFloat);
+	aMean = nAttr.create("mean", "mean", MFnNumericData::k3Float);
 	nAttr.setKeyable(true);
+	nAttr.isWorldSpace();
+	MSpace::kObject;
 	addAttribute(aMean);
 	attributeAffects(aMean, aOutValue);
 
@@ -62,7 +83,13 @@ MStatus PointGrowthNode::compute(const MPlug& plug, MDataBlock& data)
 		return MS::kUnknownParameter;
 	}
 
-	float inputValue = data.inputValue(aInValue, &status).asFloat();
+	/*
+	space = OpenMaya.MSpace.kObject
+		if worldSpace: space = OpenMaya.MSpace.kWorld
+	*/
+
+	float inputValueX = data.inputValue(aInValueX, &status).asFloat();
+	float inputValueZ = data.inputValue(aInValueZ, &status).asFloat();
 	float magnitude = data.inputValue(aMagnitude, &status).asFloat();
 	float mean = data.inputValue(aMean, &status).asFloat();
 	float variance = data.inputValue(aVariance, &status).asFloat();
@@ -71,7 +98,7 @@ MStatus PointGrowthNode::compute(const MPlug& plug, MDataBlock& data)
 		variance = 0.001f;
 	}
 
-	float xMinusB = inputValue - mean;
+	float xMinusB = ((inputValueX * inputValueZ) / 2 ) - mean;
 	float output = magnitude * exp(-(xMinusB * xMinusB) / (2.0f * variance));
 
 	MDataHandle hOutput = data.outputValue(aOutValue, &status);
@@ -82,3 +109,13 @@ MStatus PointGrowthNode::compute(const MPlug& plug, MDataBlock& data)
 
 	return MS::kSuccess;
 }
+
+/// --- go over plug array --- ///
+/*
+for (i = 0; i < arrayPlug.numElements(); i++)
+{
+	MPlug elementPlug = arrayPlug[i];
+	unsigned int logicalIndex = elementPlug.logicalIndex();
+	// ...
+}
+*/

@@ -1,5 +1,4 @@
-﻿  Main.cpp
-  PointGrowth.cpp
-  Generating Code...
+﻿  PointGrowth.cpp
+  LINK : .\build\debug\PointGrowth.mll not found or not built by the last incremental link; performing full link
      Creating library .\build\debug\PointGrowth.lib and object .\build\debug\PointGrowth.exp
   PointGrowth.vcxproj -> G:\Prog\PointGrowthNode\PointGrowth\build\debug\PointGrowth.mll
