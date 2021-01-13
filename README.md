@@ -1,3 +1,6 @@
+#INSTALL THE PLUGIN IN MAYA
+#VISUALIZER FOR THE PYTHON SCRIPT EDITOR IN MAYA 
+
 import maya.cmds as cmds
 import pymel.core as pm
 
@@ -7,7 +10,7 @@ controller = pm.polySphere(radius = geoSize, name = 'controller')
 geoSize = 0.2
 magnitude = -0.5
 variance = 0.5
-amountOfCubes = 20
+amountOfCubes = 40
 x = (-(geoSize * amountOfCubes)/2) - 0.1
 z = 0
 
