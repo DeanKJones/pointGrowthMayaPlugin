@@ -1,9 +1,15 @@
 #pragma once
 
 #include <maya/MPxNode.h>
-#include <maya/MFnNumericAttribute.h>
 #include <math.h>
+#include <iostream>
+#include <maya/MMatrix.h> 
+#include <maya/MVector.h>
+
+#include <maya/MFnNumericAttribute.h>
+#include <maya/MFnMatrixAttribute.h>
 #include <maya/MFnGeometryFilter.h>
+
 
 #ifndef POINTGROWTHNODE_H
 #define POINTGROWTHNODE_H
@@ -24,10 +30,9 @@ public:
 	static  MTypeId      id;
 
 	static  MObject		aOutValue;
-	static  MObject		aInValueX;
-	static  MObject		aInValueZ;
+	static  MObject		aInValue;
 	static  MObject		aMagnitude;
-	static  MObject		aMean;
+	static  MObject		aGeoPosition;
 	static  MObject		aVariance;
 };
 

@@ -1,11 +1,11 @@
 #include "PointGrowth.h"
+#include <math.h>
 
 MTypeId     PointGrowthNode::id(0x00000451);
 MObject		PointGrowthNode::aOutValue;
-MObject		PointGrowthNode::aInValueX;
-MObject		PointGrowthNode::aInValueZ;
+MObject		PointGrowthNode::aInValue;
 MObject		PointGrowthNode::aMagnitude;
-MObject		PointGrowthNode::aMean;
+MObject		PointGrowthNode::aGeoPosition;
 MObject		PointGrowthNode::aVariance;
 
 PointGrowthNode::PointGrowthNode()
@@ -38,33 +38,28 @@ MStatus PointGrowthNode::initialize()
 
 	MStatus status;
 	MFnNumericAttribute nAttr;
+	MFnMatrixAttribute mAttr;
 
 	aOutValue = nAttr.create("outValue", "outValue", MFnNumericData::kFloat);
 	nAttr.setWritable(false);
 	nAttr.setStorable(false);
 	addAttribute(aOutValue);
 
-	aInValueX = nAttr.create("inValueX", "inValueX", MFnNumericData::kFloat);
-	nAttr.setKeyable(true);
-	addAttribute(aInValueX);
-	attributeAffects(aInValueX, aOutValue);
-
-	aInValueZ = nAttr.create("inValueZ", "inValueZ", MFnNumericData::kFloat);
-	nAttr.setKeyable(true);
-	addAttribute(aInValueZ);
-	attributeAffects(aInValueZ, aOutValue);
+	aInValue = mAttr.create("inValue", "inValue");
+	mAttr.setKeyable(true);
+	addAttribute(aInValue);
+	attributeAffects(aInValue, aOutValue);
 
 	aMagnitude = nAttr.create("magnitude", "magnitude", MFnNumericData::kFloat);
 	nAttr.setKeyable(true);
 	addAttribute(aMagnitude);
 	attributeAffects(aMagnitude, aOutValue);
 
-	aMean = nAttr.create("mean", "mean", MFnNumericData::k3Float);
-	nAttr.setKeyable(true);
-	nAttr.isWorldSpace();
-	MSpace::kObject;
-	addAttribute(aMean);
-	attributeAffects(aMean, aOutValue);
+	aGeoPosition = mAttr.create("geoPosition", "geoPosition");
+	mAttr.setKeyable(true);
+	mAttr.isWorldSpace();
+	addAttribute(aGeoPosition);
+	attributeAffects(aGeoPosition, aOutValue);
 
 	aVariance = nAttr.create("variance", "variance", MFnNumericData::kFloat);
 	nAttr.setKeyable(true);
@@ -83,23 +78,37 @@ MStatus PointGrowthNode::compute(const MPlug& plug, MDataBlock& data)
 		return MS::kUnknownParameter;
 	}
 
-	/*
-	space = OpenMaya.MSpace.kObject
-		if worldSpace: space = OpenMaya.MSpace.kWorld
-	*/
+	MMatrix inputValue = data.inputValue(aInValue, &status).asMatrix();
+	MVector inputPoint = MTransformationMatrix(inputValue).getTranslation(MSpace::kPostTransform);
 
-	float inputValueX = data.inputValue(aInValueX, &status).asFloat();
-	float inputValueZ = data.inputValue(aInValueZ, &status).asFloat();
+	MMatrix geoPosition = data.inputValue(aGeoPosition, &status).asMatrix();
+	MVector geoPoint = MTransformationMatrix(geoPosition).getTranslation(MSpace::kPostTransform);
+
 	float magnitude = data.inputValue(aMagnitude, &status).asFloat();
-	float mean = data.inputValue(aMean, &status).asFloat();
 	float variance = data.inputValue(aVariance, &status).asFloat();
 	if (variance <= 0.0f)
 	{
 		variance = 0.001f;
 	}
 
-	float xMinusB = ((inputValueX * inputValueZ) / 2 ) - mean;
+	/*
+	floatMagnitude = matrixInput - matrixMean
+	if magnitude = 0
+		make positive 1
+	else 
+		make 0 
+	*/
+
+	//MStatus getData(inputValue);
+
+	float distance = inputValue - mean;
+	//float magnitude = sqrt(distance)
+	float xMinusB = (inputValue) - (mean);
 	float output = magnitude * exp(-(xMinusB * xMinusB) / (2.0f * variance));
+
+	std::cout << "The distance is " << distance << "\n";
+	std::cout << "The inputValues are " << inputValue << "\n";
+	std::cout << "The mean values are " << mean << "\n";
 
 	MDataHandle hOutput = data.outputValue(aOutValue, &status);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
@@ -109,13 +118,3 @@ MStatus PointGrowthNode::compute(const MPlug& plug, MDataBlock& data)
 
 	return MS::kSuccess;
 }
-
-/// --- go over plug array --- ///
-/*
-for (i = 0; i < arrayPlug.numElements(); i++)
-{
-	MPlug elementPlug = arrayPlug[i];
-	unsigned int logicalIndex = elementPlug.logicalIndex();
-	// ...
-}
-*/
