@@ -1,35 +1,29 @@
-"pointGrowthMayaPlugin" 
-
-// INSTALL PLUGIN IN MAYA //
-
-Write in the MEL script editor:
-
-///
-createNode pointGrowth
-///
-
-or a preconnected node settup in the Python script editor:
-
-///
 import maya.cmds as cmds
 import pymel.core as pm
 
-controller = pm.polySphere(radius = 0.2, name = 'controller')
-cubeSize = 0.2
-magnitude = 1
-variance = 0.35
+controller = pm.polySphere(radius = geoSize, name = 'controller')
 
-for i in range(5):
-    #moveCube = (1, 0, 0)
-    newCube = pm.polyCube(depth = cubeSize, height = cubeSize, width = cubeSize, name = 'polycube')
-    #newCube.translate.set(moveCube)
+#Control Values
+geoSize = 0.2
+magnitude = -0.5
+variance = 0.5
+amountOfCubes = 20
+x = (-(geoSize * amountOfCubes)/2) - 0.1
+z = 0
+
+for i in range(amountOfCubes):
+    newCube = pm.polyCube(depth = geoSize, height = geoSize, width = geoSize, name = 'polycube')
+    x += geoSize
+    z += 0
+    cmds.move(x, 0, z)
+
     node = pm.createNode('pointGrowth')
     pm.connectAttr('controller.translateX', 'pointGrowth*.inValueX')
     pm.connectAttr('pointGrowth*.outValue', 'polycube*.translateY')
-    pm.connectAttr('polycube*.center', 'pointGrowth*.mean')
+    pm.connectAttr(newCube[0] + '.center', 'pointGrowth*.mean')
     
     #Set Param
-    pm.setAttr('pointGrowth*.magnitude', magnitude)
-    pm.setAttr('pointGrowth*.variance', variance)
-    pm.setAttr('pointGrowth*.inValueZ', 1)
-///
+    for nodes in node:
+        pm.setAttr(node + '.magnitude', magnitude)
+        pm.setAttr(node + '.variance', variance)
+        pm.setAttr(node + '.inValueZ', 1)
