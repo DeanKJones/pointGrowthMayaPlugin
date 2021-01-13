@@ -26,4 +26,4 @@ for i in range(amountOfCubes):
     for nodes in node:
         pm.setAttr(node + '.magnitude', magnitude)
         pm.setAttr(node + '.variance', variance)
-        pm.setAttr(node + '.inValueZ', 1)
+        pm.setAttr(node + '.inValueZ', 2)
