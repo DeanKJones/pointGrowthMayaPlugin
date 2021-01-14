@@ -3,63 +3,68 @@
 
 MTypeId     PointGrowthNode::id(0x00000451);
 MObject		PointGrowthNode::aOutValue;
-MObject		PointGrowthNode::aInValue;
+MObject		PointGrowthNode::aInValueX;
+MObject		PointGrowthNode::aInValueY;
+MObject		PointGrowthNode::aInValueZ;
 MObject		PointGrowthNode::aMagnitude;
-MObject		PointGrowthNode::aGeoPosition;
+MObject		PointGrowthNode::aGeoPositionX;
+MObject		PointGrowthNode::aGeoPositionY;
+MObject		PointGrowthNode::aGeoPositionZ;
 MObject		PointGrowthNode::aVariance;
 
-PointGrowthNode::PointGrowthNode()
-{
+PointGrowthNode::PointGrowthNode(){
 }
 
-PointGrowthNode::~PointGrowthNode()
-{
+PointGrowthNode::~PointGrowthNode(){
 }
 
-void* PointGrowthNode::creator()
-{
+void* PointGrowthNode::creator(){
 	return new PointGrowthNode();
 }
 
 MStatus PointGrowthNode::initialize()
 {
-
-	/// --- Create 3Float inputs --- ///
-	/*
-	  MFnNumericData numericData;
-      MObject obj = numericData.create( MFnNumericData::k3Float, &returnStatus );
-      CHECK_MSTATUS( returnStatus );
-
-      returnStatus = numericData.setData( (float)2.5, (float)8.7, (float)2.3345 );
-      CHECK_MSTATUS( returnStatus );
-
-      outputData.set( obj );
-	  */
-
 	MStatus status;
 	MFnNumericAttribute nAttr;
-	MFnMatrixAttribute mAttr;
+
+	/// OUTPUT VALUES ///
 
 	aOutValue = nAttr.create("outValue", "outValue", MFnNumericData::kFloat);
 	nAttr.setWritable(false);
 	nAttr.setStorable(false);
 	addAttribute(aOutValue);
 
-	aInValue = mAttr.create("inValue", "inValue");
-	mAttr.setKeyable(true);
-	addAttribute(aInValue);
-	attributeAffects(aInValue, aOutValue);
+	/// INPUT POSITIONS
+
+	aInValueX = nAttr.create("inValueX", "inValueX", MFnNumericData::kFloat);
+	nAttr.setKeyable(true);
+	addAttribute(aInValueX);
+	attributeAffects(aInValueX, aOutValue);
+
+	aInValueZ = nAttr.create("inValueZ", "inValueZ", MFnNumericData::kFloat);
+	nAttr.setKeyable(true);
+	addAttribute(aInValueZ);
+	attributeAffects(aInValueZ, aOutValue);
+	
+
+	/// AFFECTED GEO POSITIONS
+	
+	aGeoPositionX = nAttr.create("geoPositionX", "geoPositionX", MFnNumericData::kFloat);
+	nAttr.setKeyable(true);
+	addAttribute(aGeoPositionX);
+	attributeAffects(aGeoPositionX, aOutValue);
+
+	aGeoPositionZ = nAttr.create("geoPositionZ", "geoPositionZ", MFnNumericData::kFloat);
+	nAttr.setKeyable(true);
+	addAttribute(aGeoPositionZ);
+	attributeAffects(aGeoPositionZ, aOutValue);
+	
+	/// MAGNITUDE + VARIANCE
 
 	aMagnitude = nAttr.create("magnitude", "magnitude", MFnNumericData::kFloat);
 	nAttr.setKeyable(true);
 	addAttribute(aMagnitude);
 	attributeAffects(aMagnitude, aOutValue);
-
-	aGeoPosition = mAttr.create("geoPosition", "geoPosition");
-	mAttr.setKeyable(true);
-	mAttr.isWorldSpace();
-	addAttribute(aGeoPosition);
-	attributeAffects(aGeoPosition, aOutValue);
 
 	aVariance = nAttr.create("variance", "variance", MFnNumericData::kFloat);
 	nAttr.setKeyable(true);
@@ -78,37 +83,28 @@ MStatus PointGrowthNode::compute(const MPlug& plug, MDataBlock& data)
 		return MS::kUnknownParameter;
 	}
 
-	MMatrix inputValue = data.inputValue(aInValue, &status).asMatrix();
-	MVector inputPoint = MTransformationMatrix(inputValue).getTranslation(MSpace::kPostTransform);
+	float inputValueX = data.inputValue(aInValueX, &status).asFloat();
+	float inputValueZ = data.inputValue(aInValueZ, &status).asFloat();
 
-	MMatrix geoPosition = data.inputValue(aGeoPosition, &status).asMatrix();
-	MVector geoPoint = MTransformationMatrix(geoPosition).getTranslation(MSpace::kPostTransform);
+	float geoPositionX = data.inputValue(aGeoPositionX, &status).asFloat();
+	float geoPositionZ = data.inputValue(aGeoPositionZ, &status).asFloat();
 
 	float magnitude = data.inputValue(aMagnitude, &status).asFloat();
 	float variance = data.inputValue(aVariance, &status).asFloat();
-	if (variance <= 0.0f)
-	{
+	if (variance <= 0.0f){
 		variance = 0.001f;
 	}
 
-	/*
-	floatMagnitude = matrixInput - matrixMean
-	if magnitude = 0
-		make positive 1
-	else 
-		make 0 
-	*/
+	float xSqr = (inputValueX - geoPositionX) * (inputValueX - geoPositionX);
+	float zSqr = (inputValueZ - geoPositionZ) * (inputValueZ - geoPositionZ);
+	float distance = (xSqr + zSqr);
 
-	//MStatus getData(inputValue);
+	float length = (sqrt(distance));
+	if (length == 0.0f) {
+		length = 0.001f;
+	}
 
-	float distance = inputValue - mean;
-	//float magnitude = sqrt(distance)
-	float xMinusB = (inputValue) - (mean);
-	float output = magnitude * exp(-(xMinusB * xMinusB) / (2.0f * variance));
-
-	std::cout << "The distance is " << distance << "\n";
-	std::cout << "The inputValues are " << inputValue << "\n";
-	std::cout << "The mean values are " << mean << "\n";
+	float output = (magnitude * exp(-(length * magnitude) / (2.0f * variance)));
 
 	MDataHandle hOutput = data.outputValue(aOutValue, &status);
 	CHECK_MSTATUS_AND_RETURN_IT(status);

@@ -8,7 +8,10 @@
 
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MFnMatrixAttribute.h>
+#include <maya/MFnDoubleArrayData.h>
+#include <maya/MFnVectorArrayData.h>
 #include <maya/MFnGeometryFilter.h>
+#include <maya/MFnGenericAttribute.h>
 
 
 #ifndef POINTGROWTHNODE_H
@@ -30,9 +33,13 @@ public:
 	static  MTypeId      id;
 
 	static  MObject		aOutValue;
-	static  MObject		aInValue;
+	static  MObject		aInValueX;
+	static  MObject		aInValueY;
+	static  MObject		aInValueZ;
 	static  MObject		aMagnitude;
-	static  MObject		aGeoPosition;
+	static  MObject		aGeoPositionX;
+	static  MObject		aGeoPositionY;
+	static  MObject		aGeoPositionZ;
 	static  MObject		aVariance;
 };
 
