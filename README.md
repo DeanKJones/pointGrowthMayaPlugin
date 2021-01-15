@@ -1,41 +1,52 @@
-#INSTALL THE PLUGIN IN MAYA
-#VISUALIZER FOR THE PYTHON SCRIPT EDITOR IN MAYA 
+Maya plugin to implement a guassian function based on the distance of two geometries
 
+                                    ##################################
+                                        INSTALLING PLUGIN IN MAYA
+                                    ##################################
+
+Install the plugin in Maya:
+    1. Open Maya
+    2. Windows
+    3. Settings/Preferences
+    4. Plug-in manager
+    5. Browse to the .mll location and select it
+
+                                    ##################################
+                                           RUNNING A TEST SETUP 
+                                    ##################################
+                                    
 import maya.cmds as cmds
 import pymel.core as pm
 
-#Control Values
-geoSize = 0.2
-magnitude = -0.5
-variance = 0.5
-gridSize = 5
-amountOfCubes = gridSize**2
-#x = (-(geoSize * amountOfCubes)/2) - 0.1
+#... Control Values
+rows = 15            #... Rows and Columns for the grid of cubes
+cols = rows          #
+geoSize = 0.2        #... Size of the sphere radius & cube dimensions
+magnitude = -0.5     #... magnitude is the height in the Y axis the cubes will move from the sphere
+variance = 0.5       #... variance is the falloff of the guassian function 
 
+gridSpacing = geoSize + (geoSize/2)
+
+#... create sphere controller
 controller = pm.polySphere(radius = geoSize, name = 'controller')
 
-for i in range(amountOfCubes):
-    #x += geoSize 
-    lambdaNode = lambda x, y, z: '(%s, %s, %s)' % (x*0.2, y*0.0, z*0.2)
-    coords = [[lambdaNode(x, y, z) for x in range(gridSize)] for z in range(gridSize)]
-    #print(coords[0][0])
-    
-    for n in range(len(coords)):
-        position = coords[0][1]
-        #posX = position.index(0)
-        print (position)
-        #print (type(position))
+#... Create grid 
+for i in range(rows):
+    for j in range(cols):
+        #... Create Cubes and set them in position
         newCube = pm.polyCube(depth = geoSize, height = geoSize, width = geoSize, name = 'polycube')
-        #print "\n".join(map("\t".join, coords))
-        cmds.move(position)
+        cmds.move((i*gridSpacing), 0, (j*gridSpacing))
+        
+        #... Creating the plugin's node and connecting the plugs
+        node = pm.createNode('pointGrowth')
+        pm.connectAttr('controller.translateX', 'pointGrowth*.inValueX')
+        pm.connectAttr('controller.translateZ', 'pointGrowth*.inValueZ')
+        pm.connectAttr('pointGrowth*.outValue', 'polycube*.translateY')
+        pm.connectAttr(newCube[0] + '.boundingBoxCenterX', 'pointGrowth*.geoPositionX')
+        pm.connectAttr(newCube[0] + '.boundingBoxCenterZ', 'pointGrowth*.geoPositionZ')
 
-    #node = pm.createNode('pointGrowth')
-    #pm.connectAttr('controller.translateX', 'pointGrowth*.inValueX')
-    #pm.connectAttr('pointGrowth*.outValue', 'polycube*.translateY')
-    #pm.connectAttr(newCube[0] + '.center', 'pointGrowth*.mean')
-    
-    #Set Param
-    #for nodes in node:
-        #pm.setAttr(node + '.magnitude', magnitude)
-        #pm.setAttr(node + '.variance', variance)
-        #pm.setAttr(node + '.inValueZ', 2)
+        #... Set Parameters of the plugin
+        for nodes in node:
+            pm.setAttr(node + '.magnitude', magnitude)
+            pm.setAttr(node + '.variance', variance)
+        
