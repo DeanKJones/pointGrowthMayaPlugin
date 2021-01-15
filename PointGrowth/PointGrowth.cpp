@@ -104,7 +104,8 @@ MStatus PointGrowthNode::compute(const MPlug& plug, MDataBlock& data)
 		length = 0.001f;
 	}
 
-	float output = (magnitude * exp(-(length * magnitude) / (2.0f * variance)));
+	//float aMinusB = length - magnitude;
+	float output = (magnitude * exp(-(length*length) / (2.0f * (variance))));
 
 	MDataHandle hOutput = data.outputValue(aOutValue, &status);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
