@@ -1,5 +1,4 @@
 #include "PointGrowth.h"
-#include <math.h>
 
 MTypeId     PointGrowthNode::id(0x00000451);
 MObject		PointGrowthNode::aOutValue;
@@ -27,6 +26,7 @@ MStatus PointGrowthNode::initialize()
 	MStatus status;
 	MFnNumericAttribute nAttr;
 
+	/// INITIALIZE ATTRIBUTES ///
 	/// OUTPUT VALUES ///
 
 	aOutValue = nAttr.create("outValue", "outValue", MFnNumericData::kFloat);
@@ -46,7 +46,6 @@ MStatus PointGrowthNode::initialize()
 	addAttribute(aInValueZ);
 	attributeAffects(aInValueZ, aOutValue);
 	
-
 	/// AFFECTED GEO POSITIONS
 	
 	aGeoPositionX = nAttr.create("geoPositionX", "geoPositionX", MFnNumericData::kFloat);
@@ -82,7 +81,7 @@ MStatus PointGrowthNode::compute(const MPlug& plug, MDataBlock& data)
 	{
 		return MS::kUnknownParameter;
 	}
-
+	 
 	float inputValueX = data.inputValue(aInValueX, &status).asFloat();
 	float inputValueZ = data.inputValue(aInValueZ, &status).asFloat();
 
@@ -104,7 +103,6 @@ MStatus PointGrowthNode::compute(const MPlug& plug, MDataBlock& data)
 		length = 0.001f;
 	}
 
-	//float aMinusB = length - magnitude;
 	float output = (magnitude * exp(-(length*length) / (2.0f * (variance))));
 
 	MDataHandle hOutput = data.outputValue(aOutValue, &status);
