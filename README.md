@@ -9,7 +9,7 @@ Maya plugin to implement a guassian function based on the distance of two geomet
         2. Windows
         3. Settings/Preferences
         4. Plug-in manager
-        5. Browse to the .mll location and select it
+        5. Browse to the "FinalBuild" .mll location and select it
 
                                     ##################################
                                            RUNNING A TEST SETUP 
