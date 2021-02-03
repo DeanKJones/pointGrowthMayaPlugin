@@ -2,12 +2,12 @@
 
 MTypeId     PointGrowthNode::id(0x00000451);
 MObject		PointGrowthNode::aOutValue;
+//MObject		PointGrowthNode::aPointGL;
+MObject		PointGrowthNode::aMatrixGL;
 MObject		PointGrowthNode::aInValueX;
-MObject		PointGrowthNode::aInValueY;
 MObject		PointGrowthNode::aInValueZ;
 MObject		PointGrowthNode::aMagnitude;
 MObject		PointGrowthNode::aGeoPositionX;
-MObject		PointGrowthNode::aGeoPositionY;
 MObject		PointGrowthNode::aGeoPositionZ;
 MObject		PointGrowthNode::aVariance;
 
@@ -42,6 +42,11 @@ MStatus PointGrowthNode::initialize()
 	attributeAffects(aInValueX, aOutValue);
 
 	aInValueZ = nAttr.create("inValueZ", "inValueZ", MFnNumericData::kFloat);
+	nAttr.setKeyable(true);
+	addAttribute(aInValueZ);
+	attributeAffects(aInValueZ, aOutValue);
+
+	aMatrixGL = nAttr.create("inMatrixGL", "inMatrixGL", MFnNumericData::kFloat);
 	nAttr.setKeyable(true);
 	addAttribute(aInValueZ);
 	attributeAffects(aInValueZ, aOutValue);
@@ -81,6 +86,11 @@ MStatus PointGrowthNode::compute(const MPlug& plug, MDataBlock& data)
 	{
 		return MS::kUnknownParameter;
 	}
+
+	/// OGL ///
+	MMatrix inputMatrix = data.inputValue(aMatrixGL).asMatrix();
+	MVector inputPoint = MTransformationMatrix(inputMatrix).getTranslation(MSpace::kPostTransform);
+
 	 
 	float inputValueX = data.inputValue(aInValueX, &status).asFloat();
 	float inputValueZ = data.inputValue(aInValueZ, &status).asFloat();
@@ -112,4 +122,48 @@ MStatus PointGrowthNode::compute(const MPlug& plug, MDataBlock& data)
 	data.setClean(plug);
 
 	return MS::kSuccess;
+}
+
+/// --- OPENGL --- ///
+
+void PointGrowthNode::drawDisc(float radius, int divisions, bool filled)
+{
+	int renderState = filled ? GL_POLYGON : GL_LINE_LOOP;
+	float degreesPerDiv = 360.0f / divisions;
+	float radiansPerDiv = degreesPerDiv * 0.01745327778f;
+	MFloatPointArray points(divisions);
+	for (int i = 0; i < divisions; i++)
+	{
+		float angle = i * radiansPerDiv;
+		float x = cos(angle) * radius;
+		float z = sin(angle) * radius;
+		points[i].x = x;
+		points[i].z = z;
+	}
+
+	glBegin(renderState);
+	for (int i = 0; i < divisions; i++)
+	{
+		glVertex3f(points[i].x, 0.0f, points[i].z);
+	}
+	glEnd();
+}
+
+
+bool PointGrowthNode::isBounded() const
+{
+	return true;
+}
+
+
+bool PointGrowthNode::isTransparent() const
+{
+	return true;
+}
+
+
+MBoundingBox PointGrowthNode::boundingBox() const
+{
+	MBoundingBox bbox;
+	return bbox;
 }
